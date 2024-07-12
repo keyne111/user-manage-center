@@ -1,10 +1,10 @@
 package com.xiaofan.usercenter.service.impl;
-import java.time.LocalDateTime;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.xiaofan.usercenter.common.ErrorCode;
 import com.xiaofan.usercenter.constants.UserConstant;
+import com.xiaofan.usercenter.exception.BusinessException;
 import com.xiaofan.usercenter.model.domain.User;
 import com.xiaofan.usercenter.service.UserService;
 import com.xiaofan.usercenter.mapper.UserMapper;
@@ -35,36 +35,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param userAccount 用户账号
      * @param userPassword 用户密码
      * @param checkPassword 确认密码
+     * @param planetCode
      * @return 用户id
      */
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         // 字段非空
-        if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
-            return -1;
+        if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,planetCode)){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"字段不能为空");
         }
         // 账号长度要>=4位
         if(userAccount.length()<4){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号长度过短");
         }
         // 密码和确认密码的长度都要>=8位
         if(userPassword.length()<8 || checkPassword.length()<8){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码长度过短");
+        }
+        // 长度过长，非法
+        if(planetCode.length()>5){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"星球编号异常");
         }
 
         // 账号包含特殊字符则放回-1
         String validPattern = "[`~ !@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]"; //合法表达式
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if(matcher.find()){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号包含特殊字符");
         }
 
-        // 密码和校验密码相同
+        // 密码和校验密码不相同
         if(!userPassword.equals(checkPassword)){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码和校验密码不相同");
         }
         //密码强校验：密码由四种元素组成（数字、大写字母、小写字母、特殊字符），且必须包含全部四种元素；密码长度大于等于8个字符。
         if(!PasswordValidatorUtils.isValid(userPassword)){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码由四种元素组成（数字、大写字母、小写字母、特殊字符），且必须包含全部四种元素；密码长度大于等于8个字符");
         }
 
         // 账号不能重复
@@ -73,7 +78,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getOne(queryWrapper);
         // 查到了用户，说明了重复
         if(user !=null){
-            return -1;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号重复");
+        }
+
+        // 星球编号不能重复
+        queryWrapper=new QueryWrapper<>();
+        queryWrapper.eq("planetCode",planetCode);
+        user = this.getOne(queryWrapper);
+        // 查到了用户，说明了重复
+        if(user !=null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"星球编号重复");
         }
 
         // 加盐加密
@@ -85,9 +99,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user1.setUserAccount(userAccount);
         user1.setSalt(salt);
         user1.setUserPassword(encryptedPassword);
+        user1.setPlanetCode(planetCode);
         boolean saveResult = this.save(user1);
         if(!saveResult){
-            return -1;
+            throw new BusinessException(ErrorCode.SAVE_ERROR);
         }
         return user1.getId();
     }
@@ -103,27 +118,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 字段非空
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"字段不能为空");
         }
         // 账号长度要>=4位
         if(userAccount.length()<4){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号长度过短");
         }
         // 密码和确认密码的长度都要>=8位
         if(userPassword.length()<8){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码长度过短");
         }
 
         // 账号包含特殊字符则放回-1
         String validPattern = "[`~ !@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]"; //合法表达式
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if(matcher.find()){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"账号包含特殊字符");
         }
 
         //密码强校验：密码由四种元素组成（数字、大写字母、小写字母、特殊字符），且必须包含全部四种元素；密码长度大于等于8个字符。
         if(!PasswordValidatorUtils.isValid(userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码由四种元素组成（数字、大写字母、小写字母、特殊字符），且必须包含全部四种元素；密码长度大于等于8个字符");
         }
 
 
@@ -134,7 +149,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 查不到用户
         if(user ==null){
             log.info("userInfo select fail");
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"查无此用户");
         }
         String encryptedPassword = MD5Util.getSaltMD5(userPassword, user.getSalt());
         queryWrapper.eq("userPassword",encryptedPassword);
@@ -142,7 +157,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 密码不匹配
         if(user==null){
             log.info("user login fail,userAccount cannot match userPassword");
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码不匹配");
         }
 
         //脱敏后的用户信息
@@ -173,7 +188,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         safeUser.setUserStatus(originUser.getUserStatus());
         safeUser.setCreateTime(originUser.getCreateTime());
         safeUser.setUpdateTime(originUser.getUpdateTime());
+        safeUser.setPlanetCode(originUser.getPlanetCode());
         return safeUser;
+    }
+
+    /**
+     * 用户注销
+     *
+     * @param request
+     */
+    @Override
+    public void userLogout(HttpServletRequest request) {
+        request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATUS);
     }
 
 

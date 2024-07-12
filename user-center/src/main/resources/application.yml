@@ -1,7 +1,7 @@
 server:
   port: 8080
   servlet:
-#    context-path: /api
+    context-path: /api
 spring:
   application:
     name: user-center
@@ -20,3 +20,4 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除字段名
       logic-delete-value: 1 # 逻辑已删除值
       logic-not-delete-value: 0 # 逻辑未删除值
+

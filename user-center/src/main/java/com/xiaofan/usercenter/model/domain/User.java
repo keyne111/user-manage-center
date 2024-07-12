@@ -99,6 +99,13 @@ public class User implements Serializable {
     @TableField(value = "isDelete")
     private Integer isDelete;
 
+    /**
+     * 星球编号
+     */
+    @TableField(value = "planetCode")
+    private String planetCode;
+
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

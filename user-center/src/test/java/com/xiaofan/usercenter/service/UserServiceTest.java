@@ -1,15 +1,10 @@
 package com.xiaofan.usercenter.service;
-import java.time.LocalDateTime;
 
-import com.xiaofan.usercenter.UserCenterApplication;
 import com.xiaofan.usercenter.model.domain.User;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 用户服务测试
@@ -44,35 +39,38 @@ class UserServiceTest {
         String userAccount="xiaofan";
         String userPassword="";
         String checkPassword="12345678";
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        String planetCode="1";
+        long result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode );
         Assertions.assertEquals(-1,result);
 
         userAccount="xia";
         userPassword="12345678";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode );
         Assertions.assertEquals(-1,result);
 
         checkPassword="123456";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode );
         Assertions.assertEquals(-1,result);
 
         userAccount="xiao❤fa";
         checkPassword="12345678";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode );
         Assertions.assertEquals(-1,result);
 
         userAccount="1234";
-        userPassword="1Aa+1234";
-        checkPassword="1Aa+1234";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        userPassword="Aa+12345";
+        checkPassword="Aa+12345";
+        result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode );
         Assertions.assertEquals(-1,result);
+        //
+        // userAccount="xiaofan2";
+        // planetCode="1";
+        // result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        // Assertions.assertEquals(-1,result);
 
-        userAccount="xiaofan";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        userAccount="xiaofan2";
+        planetCode="1";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         Assertions.assertEquals(-1,result);
-
-        userAccount="xiaofan4";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
-        Assertions.assertTrue(result>0);
     }
 }

@@ -1,6 +1,9 @@
 package com.xiaofan.usercenter.controller;
 
+import com.xiaofan.usercenter.common.ErrorCode;
+import com.xiaofan.usercenter.common.Result;
 import com.xiaofan.usercenter.constants.UserConstant;
+import com.xiaofan.usercenter.exception.BusinessException;
 import com.xiaofan.usercenter.model.domain.User;
 import com.xiaofan.usercenter.model.domain.dto.UserLoginDto;
 import com.xiaofan.usercenter.model.domain.dto.UserRegisterDto;
@@ -19,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/user")
 @Tag(name = "用户管理")
 @Slf4j
 public class UserController {
@@ -29,45 +32,60 @@ public class UserController {
 
     @PostMapping("/register")
     @Operation(summary = "用户注册")
-    public Long userRegister(@RequestBody UserRegisterDto registerDto){
+    public Result<Long> userRegister(@RequestBody UserRegisterDto registerDto){
         log.info("用户注册:{}",registerDto);
         if(registerDto==null){
-            return null;
+             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         String userAccount = registerDto.getUserAccount();
         String userPassword = registerDto.getUserPassword();
         String checkPassword = registerDto.getCheckPassword();
-        if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
-            return null;
+        String planetCode = registerDto.getPlanetCode();
+
+        if(StringUtils.isAnyBlank(userAccount,userPassword,checkPassword,planetCode)){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
 
-        return userService.userRegister(userAccount, userPassword, checkPassword);
-
+        long id = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        return Result.success(id);
     }
 
 
     @PostMapping("/login")
     @Operation(summary = "用户登录")
-    public User userLogin(@RequestBody UserLoginDto loginDto, HttpServletRequest request){
+    public Result<User> userLogin(@RequestBody UserLoginDto loginDto, HttpServletRequest request){
         log.info("用户登录:{}",loginDto);
         if(loginDto==null){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         String userAccount = loginDto.getUserAccount();
         String userPassword = loginDto.getUserPassword();
         if(StringUtils.isAnyBlank(userAccount,userPassword)){
-            return null;
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
 
-        return userService.userLogin(userAccount, userPassword, request);
+        User user = userService.userLogin(userAccount, userPassword, request);
+        return Result.success(user);
     }
 
-    @GetMapping("/search/{username}")
+    @PostMapping("/logout")
+    @Operation(summary = "用户注销")
+    public Result<String> userLogout(HttpServletRequest request){
+       if(request==null){
+           throw new BusinessException(ErrorCode.PARAM_ERROR);
+       }
+        userService.userLogout(request);
+        return Result.success("ok");
+    }
+
+
+    @GetMapping("/search")
     @Operation(summary = "根据用户名查询")
-    public List<User> userSearch(@PathVariable String username,HttpServletRequest request){
+    public Result<List<User>> userSearch( String username,HttpServletRequest request){
         //鉴权，管理员才有权限
         if (!isAdmin(request)){
-            return new ArrayList<>();
+            throw new BusinessException(ErrorCode.NO_AUTH);
+
         }
 
         log.info("根据用户名查询：{}",username);
@@ -75,25 +93,42 @@ public class UserController {
         List<User> userList = userService.searchByUserName(username);
 
         //对用户进行脱敏操作
-       return userList.stream().map(originUser -> {
-           return userService.getSafetyUser(originUser);
-       }).collect(Collectors.toList());
+        List<User> list = userList.stream().map(originUser -> {
+            return userService.getSafetyUser(originUser);
+        }).collect(Collectors.toList());
+        return Result.success(list);
 
 
     }
 
     @PostMapping("/delete")
     @Operation(summary = "管理员删除用户")
-    public Boolean delete(@RequestParam long userId,HttpServletRequest request){
+    public Result<Boolean> delete(@RequestParam long userId,HttpServletRequest request){
         //鉴权，管理员才有权限
         if (!isAdmin(request)) {
-            return false;
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
         if(userId<=0){
-            return false;
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         // 因为yml开启了逻辑删除，所以会把他修改isDelete字段
-        return userService.removeById(userId);
+        boolean result = userService.removeById(userId);
+        return Result.success(result);
+
+    }
+
+    @GetMapping("/current")
+    @Operation(summary = "得到当前用户具体信息")
+    public Result<User> getCurrentUser(HttpServletRequest request){
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATUS);
+        User user=(User) userObj;
+        if(user == null){
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        Long id = user.getId();
+        User currentUser = userService.getById(id);
+        return Result.success(currentUser);
+
 
     }
 

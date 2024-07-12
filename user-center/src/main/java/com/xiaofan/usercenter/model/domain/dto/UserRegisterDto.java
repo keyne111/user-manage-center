@@ -20,5 +20,8 @@ public class UserRegisterDto implements Serializable {
     @Schema(allowableValues = "校验密码")
     private String checkPassword;
 
+    @Schema(allowableValues = "星球编号")
+    private String planetCode;
+
 
 }
