@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  servlet:
+#    context-path: /api
+spring:
+  application:
+    name: user-center
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/xiaofan-usermanager?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+  session: # 设置session的过期时间
+    timeout: 86400
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false # 关闭驼峰命名，不过直接@TableField(value = "isDelete")这个注解，可以不用管这个  开启的话domain的字段例子：userAccount 会变成 user_account
+  global-config:
+    db-config: # 逻辑删除字段会参与查询，但是会被过滤掉
+      logic-delete-field: isDelete # 全局逻辑删除字段名
+      logic-delete-value: 1 # 逻辑已删除值
+      logic-not-delete-value: 0 # 逻辑未删除值
