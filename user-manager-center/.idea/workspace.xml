@@ -5,12 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f4e8d44c-ddce-473c-9fc1-432ea3f9bc61" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp/config/proxy.ts" beforeDir="false" afterPath="$PROJECT_DIR$/myapp/config/proxy.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp/src/components/Footer/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/myapp/src/components/Footer/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp/src/pages/User/Login/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/myapp/src/pages/User/Login/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp/src/services/ant-design-pro/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/myapp/src/services/ant-design-pro/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp/src/services/ant-design-pro/typings.d.ts" beforeDir="false" afterPath="$PROJECT_DIR$/myapp/src/services/ant-design-pro/typings.d.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../user-center/src/main/java/com/xiaofan/usercenter/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../user-center/src/main/java/com/xiaofan/usercenter/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../user-center/src/main/java/com/xiaofan/usercenter/service/impl/UserServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../user-center/src/main/java/com/xiaofan/usercenter/service/impl/UserServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../user-center/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../user-center/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-manager-center/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-manager-center/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-manager-center/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/user-manager-center/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-manager-center/myapp/config/routes.ts" beforeDir="false" afterPath="$PROJECT_DIR$/user-manager-center/myapp/config/routes.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-manager-center/myapp/src/app.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/user-manager-center/myapp/src/app.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/user-manager-center/myapp/src/constants/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/user-manager-center/myapp/src/constants/index.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,22 +40,28 @@
   <component name="ProjectViewState">
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;16.20.0&quot;,
-    &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;16.18.101&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_interpreter_path&quot;: &quot;D:/software/nodejs(16)/node&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;npm.start.executor&quot;: &quot;Run&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;terminal&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;F:\\yu-zsxq\\用户中心\\user-manager-center\\myapp\\node_modules\\typescript\\lib&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "javascript.nodejs.core.library.configured.version": "16.20.0",
+    "javascript.nodejs.core.library.typings.version": "16.18.101",
+    "last_opened_file_path": "C:/Users/dell/Desktop/user-center-frontend-master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_interpreter_path": "D:/software/nodejs(16)/node",
+    "nodejs_package_manager_path": "npm",
+    "npm.start.executor": "Run",
+    "settings.editor.selected.configurable": "terminal",
+    "ts.external.directory.path": "F:\\yu-zsxq\\用户中心\\user-manager-center\\myapp\\node_modules\\typescript\\lib"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="F:\yu-zsxq\用户中心\user-manager-center\myapp\src\pages" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="start" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/myapp/package.json" />
@@ -91,6 +99,7 @@
       <workItem from="1720665132577" duration="5268000" />
       <workItem from="1720692755145" duration="123000" />
       <workItem from="1720692899924" duration="11334000" />
+      <workItem from="1720748520910" duration="7721000" />
     </task>
     <servers />
   </component>

@@ -2,3 +2,6 @@ export const SYSTEM_LOGO="https://www.logosc.cn/oss/icons/2022/10/18/Yt1NwjSZdkX
 
 //github地址
 export const GIT_HUB="https://github.com/keyne111"
+
+
+export const PLANET_LINK = "https://docs.qq.com/doc/DUG93dVNHbVZjZXpo";
