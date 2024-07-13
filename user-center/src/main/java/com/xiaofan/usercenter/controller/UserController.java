@@ -81,12 +81,11 @@ public class UserController {
 
     @GetMapping("/search")
     @Operation(summary = "根据用户名查询")
-    public Result<List<User>> userSearch( String username,HttpServletRequest request){
-        //鉴权，管理员才有权限
-        if (!isAdmin(request)){
-            throw new BusinessException(ErrorCode.NO_AUTH);
-
-        }
+    public Result<List<User>> userSearchByAdmin( String username,HttpServletRequest request){
+        // 做了个AOP自动鉴权了
+        // if (!isAdmin(request)){
+        //     throw new BusinessException(ErrorCode.NO_AUTH);
+        // }
 
         log.info("根据用户名查询：{}",username);
         //因为不管有没有传入用户名，都要查询，所以就不写校验为null了
@@ -103,11 +102,11 @@ public class UserController {
 
     @PostMapping("/delete")
     @Operation(summary = "管理员删除用户")
-    public Result<Boolean> delete(@RequestParam long userId,HttpServletRequest request){
-        //鉴权，管理员才有权限
-        if (!isAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH);
-        }
+    public Result<Boolean> deleteByAdmin(@RequestParam long userId,HttpServletRequest request){
+        //  做了个AOP自动鉴权了
+        // if (!isAdmin(request)) {
+        //     throw new BusinessException(ErrorCode.NO_AUTH);
+        // }
         if(userId<=0){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
