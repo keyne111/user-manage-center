@@ -5,8 +5,12 @@ import com.xiaofan.usercenter.common.ErrorCode;
 import com.xiaofan.usercenter.constants.UserConstant;
 import com.xiaofan.usercenter.exception.BusinessException;
 import com.xiaofan.usercenter.model.domain.User;
+import com.xiaofan.usercenter.utils.CookieUtil;
+import com.xiaofan.usercenter.utils.JsonUtil;
+import com.xiaofan.usercenter.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
@@ -14,6 +18,7 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -29,6 +34,9 @@ import java.util.Map;
 @Aspect
 @Component
 public class AdminAspect {
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     Logger logger = LoggerFactory.getLogger(AdminAspect.class);
     @Pointcut("execution(* com.xiaofan.usercenter.controller.UserController+.*Admin(..)) && within(com.xiaofan.usercenter.controller.*)")
@@ -60,15 +68,29 @@ public class AdminAspect {
         HttpServletRequest request = (HttpServletRequest) requestAttributes.resolveReference(RequestAttributes.REFERENCE_REQUEST);
         logger.info("==> 请求者的IP：" + request.getRemoteAddr());
         //如果要获取Session信息的话，可以这样写：
-        HttpSession session = (HttpSession) requestAttributes.resolveReference(RequestAttributes.REFERENCE_SESSION);
-        Object userObj = session.getAttribute(UserConstant.USER_LOGIN_STATUS);
-        User user = (User) userObj;
-        if(user == null){
+        // HttpSession session = (HttpSession) requestAttributes.resolveReference(RequestAttributes.REFERENCE_SESSION);
+        // Object userObj = session.getAttribute(UserConstant.USER_LOGIN_STATUS);
+        // User user = (User) userObj;
+        // if(user == null){
+        //     throw new BusinessException(ErrorCode.NOT_ALOGIN);
+        // }
+        // if (user.getUserRole() != UserConstant.ADMIN_ROLE) {
+        //     throw new BusinessException(ErrorCode.NO_AUTH);
+        // }
+        String loginToken = CookieUtil.readLoginToken(request);
+        if(StringUtils.isBlank(loginToken)){
             throw new BusinessException(ErrorCode.NOT_ALOGIN);
         }
-        if (user.getUserRole() != UserConstant.ADMIN_ROLE) {
+        //从Redis中获取用户的json数据
+        String userJson = (String)redisUtil.get(loginToken);
+        //json转换成Use对象
+        User cookieUser = JsonUtil.string2Obj(userJson, User.class);
+
+        if(cookieUser == null){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        if(cookieUser.getUserRole() != UserConstant.ADMIN_ROLE){
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
-
     }
 }

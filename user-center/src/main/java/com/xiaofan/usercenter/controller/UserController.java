@@ -1,5 +1,7 @@
 package com.xiaofan.usercenter.controller;
 
+import com.alibaba.fastjson2.JSON;
+import com.xiaofan.usercenter.common.Const;
 import com.xiaofan.usercenter.common.ErrorCode;
 import com.xiaofan.usercenter.common.Result;
 import com.xiaofan.usercenter.constants.UserConstant;
@@ -9,16 +11,24 @@ import com.xiaofan.usercenter.model.domain.dto.UserLoginDto;
 import com.xiaofan.usercenter.model.domain.dto.UserRegisterDto;
 import com.xiaofan.usercenter.service.UserService;
 
+import com.xiaofan.usercenter.utils.CookieUtil;
+import com.xiaofan.usercenter.utils.JsonUtil;
+import com.xiaofan.usercenter.utils.RedisUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,6 +39,13 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
+
+    @Autowired
+    private RedisUtil redisUtil;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @PostMapping("/register")
     @Operation(summary = "用户注册")
@@ -53,7 +70,7 @@ public class UserController {
 
     @PostMapping("/login")
     @Operation(summary = "用户登录")
-    public Result<User> userLogin(@RequestBody UserLoginDto loginDto, HttpServletRequest request){
+    public Result<User> userLogin(@RequestBody UserLoginDto loginDto, HttpServletRequest request, HttpSession session, HttpServletResponse response){
         log.info("用户登录:{}",loginDto);
         if(loginDto==null){
             throw new BusinessException(ErrorCode.PARAM_ERROR);
@@ -65,19 +82,52 @@ public class UserController {
         }
 
         User user = userService.userLogin(userAccount, userPassword, request);
+
+        //存储到redis中
+        redisUtil.set(session.getId(), JsonUtil.obj2String(user), Const.REDIS_SESSION_EXPIRE);
+        //生成cookie
+        CookieUtil.writeLoginToken(session.getId(),response);
+
         return Result.success(user);
     }
 
     @PostMapping("/logout")
     @Operation(summary = "用户注销")
-    public Result<String> userLogout(HttpServletRequest request){
-       if(request==null){
-           throw new BusinessException(ErrorCode.PARAM_ERROR);
-       }
-        userService.userLogout(request);
+    public Result<String> userLogout(HttpServletRequest request,HttpServletResponse response){
+        //读取sessionID
+        String loginToken = CookieUtil.readLoginToken(request);
+        if(StringUtils.isBlank(loginToken)){
+            throw new BusinessException(ErrorCode.NOT_ALOGIN,"不可注销");
+        }
+
+        // userService.userLogout(request);
+        //删除session
+        CookieUtil.deleteLoginToken(request,response);
+        //删除缓存
+        redisUtil.del(loginToken);
         return Result.success("ok");
     }
 
+    @GetMapping("/current")
+    @Operation(summary = "得到当前用户具体信息")
+    public Result<User> getCurrentUser(HttpServletRequest request){
+        String loginToken = CookieUtil.readLoginToken(request);
+        if(StringUtils.isBlank(loginToken)){
+            throw new BusinessException(ErrorCode.NOT_ALOGIN);
+        }
+        //从Redis中获取用户的json数据
+        String userJson = (String)redisUtil.get(loginToken);
+        //json转换成Use对象
+        User cookieUser = JsonUtil.string2Obj(userJson, User.class);
+
+        if(cookieUser == null){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        return Result.success(cookieUser);
+
+
+    }
 
     @GetMapping("/search")
     @Operation(summary = "根据用户名查询")
@@ -116,23 +166,10 @@ public class UserController {
 
     }
 
-    @GetMapping("/current")
-    @Operation(summary = "得到当前用户具体信息")
-    public Result<User> getCurrentUser(HttpServletRequest request){
-        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATUS);
-        User user=(User) userObj;
-        if(user == null){
-            throw new BusinessException(ErrorCode.PARAM_ERROR);
-        }
-        Long id = user.getId();
-        User currentUser = userService.getById(id);
-        return Result.success(currentUser);
 
-
-    }
 
     /**
-     * 是否管理员
+     * 是否管理员  初始鉴权，现在优化成AOP鉴权了
      * @param request
      * @return
      */

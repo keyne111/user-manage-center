@@ -5,13 +5,20 @@ server:
 spring:
   application:
     name: user-center
-  datasource:
-    driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/xiaofan-usermanager?useSSL=false
-    username: root
-    password: root
   session: # 设置session的过期时间
     timeout: 86400
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/xiaofan-usermanager?useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: root
+      database: 1
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false # 关闭驼峰命名，不过直接@TableField(value = "isDelete")这个注解，可以不用管这个  开启的话domain的字段例子：userAccount 会变成 user_account

@@ -6,3 +6,9 @@ spring:
     password: root
   session: # 设置session的过期时间
     timeout: 86400
+  data:
+    redis:
+      host: 47.121.196.172
+      port: 6379
+      password: root
+      database: 0

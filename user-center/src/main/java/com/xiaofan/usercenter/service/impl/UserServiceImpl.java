@@ -10,12 +10,17 @@ import com.xiaofan.usercenter.service.UserService;
 import com.xiaofan.usercenter.mapper.UserMapper;
 import com.xiaofan.usercenter.utils.MD5Util;
 import com.xiaofan.usercenter.utils.PasswordValidatorUtils;
+import com.xiaofan.usercenter.utils.RedisUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,7 +33,11 @@ import java.util.regex.Pattern;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService{
 
+    @Autowired
+    private RedisUtil redisUtil;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * 用户注册
@@ -141,31 +150,127 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAM_ERROR,"密码由四种元素组成（数字、大写字母、小写字母、特殊字符），且必须包含全部四种元素；密码长度大于等于8个字符");
         }
 
-
-        // 比对输入的账号和密码
+        //第二次有失败次数及以后才查询缓存
+        Object mes = redisUtil.get("user:" +userAccount+":salt");
         QueryWrapper<User> queryWrapper=new QueryWrapper<>();
-        queryWrapper.eq("userAccount",userAccount);
-        User user = this.getOne(queryWrapper);
-        // 查不到用户
-        if(user ==null){
-            log.info("userInfo select fail");
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"查无此用户");
+        User user=new User();
+        if(mes==null){
+            // 比对输入的账号和密码
+            queryWrapper.eq("userAccount",userAccount);
+             user = this.getOne(queryWrapper);
+            // 查不到用户
+            if(user ==null){
+                log.info("userInfo select fail");
+                throw new BusinessException(ErrorCode.PARAM_ERROR,"查无此用户");
+            }
+            redisUtil.set("user:" +userAccount+":salt",user.getSalt(),120);
         }
-        String encryptedPassword = MD5Util.getSaltMD5(userPassword, user.getSalt());
+
+
+
+        //检查用户是否被锁定
+        boolean result = checkIsLock(userAccount);
+        String key = "user:" + userAccount + ":failCount";
+        Object o1 = redisUtil.get("user:" + userAccount + ":salt");
+        String salt="";
+        if(o1 != null){
+            salt=(String) o1;
+        }
+        String encryptedPassword = MD5Util.getSaltMD5(userPassword, user.getSalt()==null ? salt : user.getSalt());
         queryWrapper.eq("userPassword",encryptedPassword);
         user = this.getOne(queryWrapper);
         // 密码不匹配
         if(user==null){
-            log.info("user login fail,userAccount cannot match userPassword");
-            throw new BusinessException(ErrorCode.PARAM_ERROR,"密码不匹配");
-        }
+            this.setFailCount(userAccount);
+            Object o = redisUtil.get(key);
+           int count=(int) o;
+           // if(count==1){
+           //     redisUtil.set("user:" +userAccount+":cache",userAccount);
+           // }
+            if(count == 5) {
+                //判断是否已经达到了最大失败次数,达到就重置
+                String lockkey = "user:" + userAccount + ":lockTime";
+                redisUtil.set(lockkey,"1",2 * 60 * 60);//设置锁定时间为2小时
+                redisUtil.del(key);
+                throw new BusinessException(ErrorCode.PARAM_ERROR,"当前账号已经被锁定，请在2小时之后尝试");
+            }
 
+            count = 5 - count;
+
+            throw new BusinessException(ErrorCode.PARAM_ERROR,("登陆失败，您还剩"+count+"次登录机会"));
+
+        }
+        //密码匹配
+        redisUtil.del(key);
         //脱敏后的用户信息
         User safeUser = getSafetyUser(user);
 
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATUS,safeUser);
+        // request.getSession().setAttribute(UserConstant.USER_LOGIN_STATUS,safeUser);
 
         return safeUser;
+    }
+
+
+    /**
+     * 是否被锁定
+     * @param userAccount
+     * @return
+     */
+    private boolean checkIsLock(String userAccount) {
+        long lockTime = this.getUserLoginTimeLock(userAccount);
+        String key = "user:" + userAccount + ":failCount";
+        if(lockTime > 0){//判断用户是否已经被锁定
+            String desc="该账号已经被锁定,请在"+lockTime+"秒之后尝试";
+            // return map;
+            throw new BusinessException(ErrorCode.PARAM_ERROR,desc);
+        }
+        return true;
+
+    }
+
+    /**
+     * 设置失败次数
+     * @param username  username
+     */
+    private void setFailCount(String username){
+        long count = this.getUserFailCount(username);
+        String key = "user:" + username + ":failCount";
+        if(count < 0){//判断redis中是否有该用户的失败登陆次数，如果没有，设置为1，过期时间为2分钟，如果有，则次数+1
+            redisUtil.set(key,1,120);
+        }else{
+            redisUtil.incr(key,1);
+        }
+    }
+
+    /**
+     * 获取当前用户已失败次数
+     * @param username  username
+     * @return  已失败次数
+     */
+    private int getUserFailCount(String username){
+        String key = "user:" + username + ":failCount";
+        //从redis中获取当前用户已失败次数
+        Object object = redisUtil.get(key);
+        if(object != null){
+            return (int)object;
+        }else{
+            return -1;
+        }
+    }
+
+    /**
+     * 检查用户是否已经被锁定，如果是，返回剩余锁定时间，如果否，返回-1
+     * @param userAccount
+     * @return  时间
+     */
+    private int getUserLoginTimeLock(String userAccount) {
+        String key = "user:" + userAccount + ":lockTime";
+        int lockTime = (int)redisUtil.getExpireSeconds(key);
+        if(lockTime > 0){//查询用户是否已经被锁定，如果是，返回剩余锁定时间，如果否，返回-1
+            return lockTime;
+        }else{
+            return -1;
+        }
     }
 
     /**
@@ -200,6 +305,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public void userLogout(HttpServletRequest request) {
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATUS);
+
     }
 
 
