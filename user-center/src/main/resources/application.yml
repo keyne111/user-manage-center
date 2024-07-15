@@ -22,7 +22,7 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false # 关闭驼峰命名，不过直接@TableField(value = "isDelete")这个注解，可以不用管这个  开启的话domain的字段例子：userAccount 会变成 user_account
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+#    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config: # 逻辑删除字段会参与查询，但是会被过滤掉
       logic-delete-field: isDelete # 全局逻辑删除字段名
