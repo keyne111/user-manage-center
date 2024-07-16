@@ -100,4 +100,16 @@ public class RedisUtil {
         return redisTemplate.opsForValue().increment(key,number);
     }
 
+
+    /**
+     * 设置过期时间
+     *
+     * @param key
+     * @param timeout
+     * @return
+     */
+    public Boolean expire(String key, long timeout) {
+        return redisTemplate.expire(key, timeout, TimeUnit.SECONDS);
+    }
+
 }
