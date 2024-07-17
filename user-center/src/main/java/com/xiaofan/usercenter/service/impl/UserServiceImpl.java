@@ -13,9 +13,11 @@ import com.xiaofan.usercenter.utils.MD5Util;
 import com.xiaofan.usercenter.utils.PasswordValidatorUtils;
 import com.xiaofan.usercenter.utils.RedisUtil;
 import io.swagger.v3.core.util.Json;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Resource
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     private RedisTemplate redisTemplate;
@@ -189,9 +194,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 //判断是否已经达到了最大失败次数,达到就重置
                 String lockkey = "user:" + userAccount + ":lockTime";
                 redisUtil.set(lockkey, "1", 2 * 60 * 60);//设置锁定时间为2小时
+
+
+                HashMap<String, String> msg = new HashMap<>();
+                msg.put("phone",user.getPhone());
+                msg.put("code","123456");
+                rabbitTemplate.convertAndSend("ali.sms.exchange","ali.verify.code",msg);
+
                 redisUtil.del(key);
                 redisUtil.del("user:" + userAccount + ":info");
-
 
                 throw new BusinessException(ErrorCode.PARAM_ERROR, "当前账号已经被锁定，请在2小时之后尝试");
             }

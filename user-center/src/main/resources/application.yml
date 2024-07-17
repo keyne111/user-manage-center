@@ -20,6 +20,12 @@ spring:
       port: 6379
       password: ${xf.redis.password}
       database: 1
+  rabbitmq:
+    host: ${xf.rabbit.host}
+    port: 5672
+    username: ${xf.rabbit.username}
+    password: ${xf.rabbit.password}
+    virtual-host: ${xf.rabbit.vhost}
 
 mybatis-plus:
   configuration:
@@ -37,3 +43,9 @@ logging:
     dateformat: HH:mm:ss:SSS
   file:
     path: "logs/${spring.application.name}"
+ali:
+  sms:
+    accessKeyId: ${xf.sms.accessKeyId}
+    accessKeySecret: ${xf.sms.accessKeySecret}
+    signName: ${xf.sms.signName}
+    verifyCodeTemplate: ${xf.sms.verifyCodeTemplate}
