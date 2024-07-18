@@ -26,6 +26,24 @@ spring:
     username: ${xf.rabbit.username}
     password: ${xf.rabbit.password}
     virtual-host: ${xf.rabbit.vhost}
+    # 以下为发送消息到mq时，由于连接问题而重试的配置
+    connection-timeout: 200ms # 连接超时时间
+    template:
+      retry:
+        enabled: true
+        initial-interval: 1000ms # 失败后的初始等待时间
+        multiplier: 1 # 失败后下次等待时长倍数
+        max-attempts: 3
+    listener: # 消费者的确认机制 会根据异常返回nack  还是reject
+      simple:
+        acknowledge-mode: auto
+        prefetch: 1 # 消息预取，每次处理完1条再取下一条
+        retry:
+          enabled: true # 开启消费者重试
+          initial-interval: 1000ms
+          multiplier: 1
+          max-attempts: 1
+          stateless: true # true为不保存事务状态  false为保存事务状态
 
 mybatis-plus:
   configuration:

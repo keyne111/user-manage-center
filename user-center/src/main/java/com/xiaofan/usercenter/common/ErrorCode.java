@@ -10,7 +10,7 @@ public enum ErrorCode {
     PARAM_ERROR(40001,"请求参数错误",""),
     NULL_ERROR(40002,"数据为空",""),
     SAVE_ERROR(40003,"插入异常",""),
-
+    SEND_ERROR(40004,"短信发送异常",""),
     SYSTEM_ERROR(50000,"系统内部错误","");
 
     private final Integer code;

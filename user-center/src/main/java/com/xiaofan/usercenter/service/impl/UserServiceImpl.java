@@ -199,8 +199,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 HashMap<String, String> msg = new HashMap<>();
                 msg.put("phone",user.getPhone());
                 msg.put("code","123456");
-                rabbitTemplate.convertAndSend("ali.sms.exchange","ali.verify.code",msg);
-
+                // rabbitTemplate.convertAndSend("ali.sms.exchange","ali.verify.code",msg);
+                rabbitTemplate.convertAndSend("simple.queue",msg);
                 redisUtil.del(key);
                 redisUtil.del("user:" + userAccount + ":info");
 
