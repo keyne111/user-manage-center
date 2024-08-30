@@ -13,7 +13,8 @@ import {stringify} from "querystring";
 const request = extend({
   credentials: 'include', // 默认请求是否带上cookie
   // prefix: process.env.NODE_ENV === 'production' ? 'http://user-backend.code-nav.cn' : undefined
-  prefix: process.env.NODE_ENV === 'production' ? 'http://47.121.196.172' : undefined
+  // prefix: process.env.NODE_ENV === 'production' ? 'http://47.121.196.172' : undefined
+  prefix: process.env.NODE_ENV === 'production' ? 'http://user-backend.keyne.love' : undefined
   // requestType: 'form',
 });
 

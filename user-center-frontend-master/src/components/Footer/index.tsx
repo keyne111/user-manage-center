@@ -17,8 +17,8 @@ const Footer: React.FC = () => {
         },
         {
           key: 'codeNav',
-          title: '编程导航',
-          href: 'https://github.com/keyne111',
+          title: '粤ICP备2024285775号',
+          href: 'https://beian.miit.gov.cn',
           blankTarget: true,
         },
         {
